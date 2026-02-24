@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="result-container">
+
+    <div class="result-header">
+        <h2>Assessment Summary for {{ data.name }}</h2>
+        <p>Analyzed on {{ data.timestamp }}</p>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="card risk-card risk-{{ data.risk_level|lower }}">
+            <div class="risk-circle">
+                <span class="risk-score">{{ data.risk_score|int }}</span>
+                <span class="risk-max">/100</span>
+            </div>
+            <div class="risk-details">
+                <h3>Risk Level: <span class="badge badge-{{ data.risk_level|lower }}">{{ data.risk_level }}</span></h3>
+                <p><strong>Recommendation:</strong></p>
+                <p class="recommendation-text">{{ data.recommendation }}</p>
+
+                {% if data.risk_level == "High" %}
+                <div style="margin-top:20px;">
+                    <button class="btn btn-primary"
+                        style="background:#dc3545; border:none; width:100%; animation: pulse 1s infinite alternate;"
+                        onclick="alert('Calling Regional Emergency Ambulance Dispatch (Mock)...')"><i
+                            class="fas fa-ambulance"></i> Dispatch Emergency Response</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Demographic & Inputs Section -->
+        <div class="card info-card">
+            <h3><i class="fas fa-user"></i> User Info</h3>
+            <ul class="info-list">
+                <li><strong>Age:</strong> {{ data.age }} years</li>
+                <li><strong>Weight:</strong> {{ data.weight }} kg</li>
+                <li><strong>Gender:</strong> {{ data.gender }}</li>
+                <li><strong>Location:</strong> <span id="userLocation">{{ data.location }}</span></li>
+                <li><strong>Symptoms Duration:</strong> {{ data.duration }}</li>
+                <li><strong>Reported Symptoms:</strong>
+                    <div class="symptom-tags">
+                        {% if data.symptoms %}
+                        {% for sym in data.symptoms.split(',') %}
+                        <span class="tag">{{ sym }}</span>
+                        {% endfor %}
+                        {% else %}
+                        <span class="tag none">None reported</span>
+                        {% endif %}
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- AI Condition Section -->
+        <div class="card analysis-card">
+            <h3><i class="fas fa-laptop-medical"></i> Condition Analysis</h3>
+            <div class="analysis-item">
+                <h4>Possible Condition:</h4>
+                <p>{{ data.condition }}</p>
+            </div>
+            <div class="analysis-item">
+                <h4>Reasoning:</h4>
+                <p>{{ data.reason }}</p>
+            </div>
+            <div class="analysis-item advicebox">
+                <h4><i class="fas fa-shield-virus"></i> Preventive Advice:</h4>
+                <p>{{ data.preventive_advice }}</p>
+            </div>
+        </div>
+
+        <!-- Doctors Section -->
+        <div class="card doctors-card">
+            <h3><i class="fas fa-hospital-user"></i> Nearby Healthcare Providers</h3>
+            <p class="small-text">Based on your location ({{ data.location }}):</p>
+            <div class="doctors-list" id="doctorsList">
+                <div class="loading-spinner" id="loadingSpinner">
+                    <i class="fas fa-spinner fa-spin"></i> Searching for nearby doctors...
+                </div>
+                <!-- JS will populate this -->
+            </div>
+        </div>
+    </div>
+
+    <div class="print-actions">
+        <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> Print Report</button>
+        <a href="{{ url_for('assessment') }}" class="btn btn-outline">Start New Assessment</a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const locationStr = document.getElementById("userLocation").innerText;
+
+        fetch('{{ url_for("find_doctors") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ location: locationStr })
+        })
+            .then(response => response.json())
+            .then(data => {
+                const list = document.getElementById('doctorsList');
+                document.getElementById('loadingSpinner').style.display = 'none';
+
+                if (data.results && data.results.length > 0) {
+                    // Limit to 5
+                    const doctors = data.results.slice(0, 5);
+                    doctors.forEach(doc => {
+                        const el = document.createElement('div');
+                        el.className = 'doctor-item';
+
+                        const ratingStr = doc.rating ? `⭐ ${doc.rating}` : 'No rating';
+                        const addr = doc.vicinity || doc.formatted_address || 'Address not available';
+
+                        el.innerHTML = `
+                        <div class="doc-icon"><i class="fas fa-user-md"></i></div>
+                        <div class="doc-info" style="flex:1;">
+                            <h5>${doc.name}</h5>
+                            <p class="doc-rating">${ratingStr}</p>
+                            <p class="doc-address">${addr}</p>
+                        </div>
+                        <div>
+                             <a href="/appointments?hospital=${encodeURIComponent(doc.name)}&address=${encodeURIComponent(addr)}" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.85rem;">Book</a>
+                        </div>
+                    `;
+                        list.appendChild(el);
+                    });
+                } else {
+                    list.innerHTML = `<p class="no-docs">No nearby doctors found in the automated search for this location.</p>`;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('doctorsList').innerHTML = `<p class="error-text">Failed to load nearby doctors.</p>`;
+            });
+    });
+</script>
+{% endblock %}

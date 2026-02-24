@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="form-wrapper" style="max-width: 600px; margin-top: 50px; text-align: center; overflow:visible;">
+    <div
+        style="background-color: var(--risk-low); border-radius: 50%; width: 100px; height: 100px; display: inline-flex; align-items: center; justify-content: center; margin-top: -50px; box-shadow: var(--shadow-lg);">
+        <i class="fas fa-check" style="color: white; font-size: 3rem;"></i>
+    </div>
+
+    <div style="padding: 30px;">
+        <h2 style="color: var(--primary-dark); margin-bottom: 10px;">Appointment Confirmed!</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">Your appointment has been successfully booked.</p>
+
+        <div class="card" style="text-align: left; padding: 20px; background-color: var(--bg-main);">
+            <ul class="info-list">
+                <li><strong><i class="fas fa-hashtag"></i> Booking ID:</strong> <span
+                        style="color: var(--primary-color); font-weight:700;">{{ doc_id }}</span></li>
+                <li><strong><i class="fas fa-stethoscope"></i> Doctor / Hospital:</strong> {{ hospital }}</li>
+                <li><strong><i class="fas fa-map-marker-alt"></i> Location:</strong> {{ address }}</li>
+                <li><strong><i class="fas fa-video"></i> Mode:</strong> {{ appt_type }}</li>
+                <li><strong><i class="far fa-clock"></i> Date & Time:</strong> {{ appt_time|replace('T', ' ') }}</li>
+                <li><strong><i class="fas fa-user-circle"></i> Patient Name:</strong> {{ session.get('username', 'Guest
+                    User') }}</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+            <button class="btn btn-outline" onclick="window.print()"><i class="fas fa-print"></i> Print Receipt</button>
+            <a href="{{ url_for('index') }}" class="btn btn-primary"><i class="fas fa-home"></i> Go to Homepage</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

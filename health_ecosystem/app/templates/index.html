@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="landing-container">
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1>AI Public Health<br><span class="highlight">Awareness Assistant</span></h1>
+            <p>Empowering you with early awareness and vital insights about your health symptoms. Start your quick
+                assessment now to understand your potential risk levels based on intelligent rule-based analysis.</p>
+            <div class="hero-actions">
+                <a href="javascript:void(0)" onclick="checkPhoneAndStart()" class="btn btn-primary btn-large">Start
+                    Assessment <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <script>
+                function checkPhoneAndStart() {
+                    let phone = prompt("Please enter your Mobile Number to verify your registration:");
+                    if (!phone) return;
+                    fetch("{{ url_for('check_phone') }}", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ phone: phone })
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.exists) {
+                                window.location.href = "{{ url_for('assessment') }}";
+                            } else {
+                                alert("This Mobile Number is not registered! Please Register first.");
+                                window.location.href = "{{ url_for('login') }}";
+                            }
+                        });
+                }
+            </script>
+        </div>
+        <div class="hero-image">
+            <div class="pulse-ring"></div>
+            <i class="fas fa-user-md doctor-icon"></i>
+        </div>
+    </div>
+
+    <div class="features-section">
+        <div class="feature-card">
+            <div class="icon-circle"><i class="fas fa-brain"></i></div>
+            <h3>Smart Logic</h3>
+            <p>Analyzes your symptoms using structured health rules.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon-circle"><i class="fas fa-shield-alt"></i></div>
+            <h3>Privacy First</h3>
+            <p>Your assessment data is safely processed for fast awareness.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon-circle"><i class="fas fa-map-marker-alt"></i></div>
+            <h3>Find Care</h3>
+            <p>Easily locate nearby doctors based on your location.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

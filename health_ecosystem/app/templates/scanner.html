@@ -1,0 +1,221 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="scanner-wrapper">
+    <div class="form-header" style="border-radius: 12px 12px 0 0;">
+        <h2><i class="fas fa-camera"></i> AI Skin Issue Scanner</h2>
+        <p>Show your skin problem (rashes, ringworm, cysts) to the camera for basic analysis and awareness.</p>
+    </div>
+
+    <div class="scanner-container">
+        <!-- Camera Section -->
+        <div class="camera-card">
+            <div class="video-container">
+                <video id="videoElement" autoplay playsinline></video>
+                <div class="scanner-overlay" id="scannerOverlay">
+                    <div class="scanning-line"></div>
+                </div>
+            </div>
+            <div class="camera-actions">
+                <button id="scanBtn" class="btn btn-primary btn-large">
+                    <i class="fas fa-search-plus"></i> Scan Affected Area
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="scan-result-card" id="scanResult" style="display: none; margin-top: 30px;">
+            <!-- Results injected here by JS -->
+        </div>
+
+        <!-- Hidden Canvas to capture frame -->
+        <canvas id="canvasElement" style="display: none;"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const video = document.getElementById('videoElement');
+        const canvas = document.getElementById('canvasElement');
+        const scanBtn = document.getElementById('scanBtn');
+        const overlay = document.getElementById('scannerOverlay');
+        const resultContainer = document.getElementById('scanResult');
+
+        // Request Camera Access
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(function (stream) {
+                    video.srcObject = stream;
+                })
+                .catch(function (error) {
+                    console.error("Camera access denied or error: ", error);
+                    alert("Could not access camera. Please allow camera permissions in your browser.");
+                });
+        } else {
+            alert("Your browser does not support camera access.");
+        }
+
+        scanBtn.addEventListener('click', () => {
+            if (!video.srcObject) {
+                alert("Camera not ready.");
+                return;
+            }
+
+            // Show scanning animation
+            overlay.style.display = 'block';
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+            // Draw current video frame to canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg');
+
+            // Send to server
+            fetch('/api/scan_skin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: imageData })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        displayScanResult(data.data, data.disclaimer);
+                        fetchDoctors();
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("An error occurred during scanning. Please try again.");
+                })
+                .finally(() => {
+                    overlay.style.display = 'none';
+                    scanBtn.disabled = false;
+                    scanBtn.innerHTML = '<i class="fas fa-search-plus"></i> Scan Affected Area';
+                });
+        });
+
+        function displayScanResult(details, disclaimer) {
+            let medList = details.medicines.map(m => `<li><i class="fas fa-pills" style="color:var(--secondary-color); margin-right:8px;"></i> ${m}</li>`).join('');
+
+            resultContainer.style.display = 'block';
+            resultContainer.innerHTML = `
+                <div class="result-header" style="margin-bottom: 20px;">
+                    <h3 style="color: var(--primary-dark);"><i class="fas fa-check-circle"></i> Analysis Complete</h3>
+                </div>
+                
+                <div class="card analysis-card">
+                    <div class="analysis-item">
+                        <h4 style="color: var(--text-muted);">Identified Condition:</h4>
+                        <p class="condition-highlight">${details.condition}</p>
+                    </div>
+                    <div class="analysis-item" style="margin-top: 15px;">
+                        <h4 style="color: var(--text-muted);">Appearance / Description:</h4>
+                        <p>${details.description}</p>
+                    </div>
+                    <div class="analysis-item bg-light" style="margin-top: 15px; display:flex; gap:10px;">
+                        <span class="badge" style="background:var(--primary-dark); color:white; padding:5px 10px;">ML Confidence: ${details.confidence || '90%'}</span>
+                        <span class="badge" style="background:var(--risk-high); color:white; padding:5px 10px;">Severity: ${details.severity || 'Monitor'}</span>
+                    </div>
+                </div>
+
+                <div class="disclaimer-banner" style="background-color: #dc3545; color: white; margin: 20px 0; border-radius: 8px; text-align: left; font-size: 1rem; padding: 15px;">
+                    ${disclaimer}
+                </div>
+
+                <div class="card medicine-card">
+                    <h4 style="color: var(--primary-dark); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom:15px;">
+                        <i class="fas fa-prescription-bottle-alt"></i> Possible Treatments / Advice:
+                    </h4>
+                    <ul class="info-list medicine-list" style="list-style: none; padding: 0;">
+                        ${medList}
+                    </ul>
+                </div>
+
+                <div class="card doctors-card" style="margin-top:20px;">
+                    <h3><i class="fas fa-user-md"></i> Nearby Doctors for Consultation</h3>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px;">We highly recommend seeing a doctor for a proper diagnosis.</p>
+                    <div class="doctors-list" id="scanDoctorsList">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Locating specific doctors nearby...</div>
+                    </div>
+                </div>
+            `;
+
+            // Smooth scroll to results
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function fetchDoctors() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        let locationString = "Perambur";
+                        try {
+                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                            const data = await response.json();
+                            const address = data.address;
+                            const city = address.city || address.town || address.village || address.suburb || address.county || '';
+                            if (city) locationString = city;
+                        } catch (e) {
+                            console.error(e);
+                        }
+
+                        callDoctorsApi({ lat: lat, lng: lng, location: locationString });
+                    },
+                    (error) => {
+                        callDoctorsApi({ location: "Perambur" });
+                    }
+                );
+            } else {
+                callDoctorsApi({ location: "Perambur" });
+            }
+        }
+
+        function callDoctorsApi(payload) {
+            fetch('/api/doctors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const docContainer = document.getElementById('scanDoctorsList');
+                    docContainer.innerHTML = '';
+                    if (data.results && data.results.length > 0) {
+                        const doctors = data.results.slice(0, 5);
+                        doctors.forEach(doc => {
+                            const el = document.createElement('div');
+                            el.className = 'doctor-item';
+                            const ratingStr = doc.rating ? `⭐ ${doc.rating}` : 'No rating';
+                            const addr = doc.vicinity || doc.formatted_address || 'Address not available';
+                            el.innerHTML = `
+                                <div class="doc-icon"><i class="fas fa-user-md"></i></div>
+                                <div class="doc-info" style="flex:1;">
+                                    <h5>${doc.name}</h5>
+                                    <p class="doc-rating">${ratingStr}</p>
+                                    <p class="doc-address">${addr}</p>
+                                </div>
+                                <div>
+                                     <a href="/appointments?hospital=${encodeURIComponent(doc.name)}&address=${encodeURIComponent(addr)}" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.85rem;">Book</a>
+                                </div>
+                            `;
+                            docContainer.appendChild(el);
+                        });
+                    } else {
+                        docContainer.innerHTML = '<p class="no-docs">No doctors found nearby.</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('scanDoctorsList').innerHTML = '<p class="error-text">Failed to load nearby doctors.</p>';
+                });
+        }
+    });
+</script>
+{% endblock %}

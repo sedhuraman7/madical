@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="form-wrapper" style="max-width: 800px; margin-top: 40px;">
+    <div class="form-header" style="background-color: var(--secondary-color);">
+        <h2><i class="far fa-calendar-check"></i> Book Doctor Appointment</h2>
+        <p>Schedule a secure consultation.</p>
+    </div>
+
+    <div style="padding: 30px;">
+        <div class="card" style="margin-bottom: 20px;">
+            <h3>Selected Healthcare Provider</h3>
+            <div class="doctor-item"
+                style="border:none; padding:15px; background:var(--primary-light); border-radius:12px;">
+                <div class="doc-icon" style="background:var(--card-bg);"><i class="fas fa-stethoscope"></i></div>
+                <div class="doc-info">
+                    <h5>{{ hospital }}</h5>
+                    <p class="doc-address"><i class="fas fa-map-marker-alt"></i> {{ address }}</p>
+                </div>
+            </div>
+        </div>
+
+        <form action="{{ url_for('book_appointment') }}" method="POST" class="assessment-form" style="padding:0;">
+            <input type="hidden" name="hospital" value="{{ hospital }}">
+            <input type="hidden" name="address" value="{{ address }}">
+
+            <div class="form-row split-row">
+                <div class="form-group">
+                    <label>Consultation Mode <span class="required">*</span></label>
+                    <select name="appt_type" required>
+                        <option value="" disabled selected>Select Mode</option>
+                        <option value="Direct Visit (In-Person)">Direct Visit (In-Person)</option>
+                        <option value="Online (Video Consultation)">Online Consultation (Video)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Date & Time <span class="required">*</span></label>
+                    <input type="datetime-local" name="appt_time" required>
+                </div>
+            </div>
+
+            <div class="card"
+                style="background-color: transparent; text-align: center; box-shadow:none; border:none; padding-bottom:0;">
+                <p style="font-size: 0.95rem; color:var(--text-muted); margin-bottom: 20px;">
+                    This appointment request will be securely verified by the doctor's administration. You will pay
+                    directly at the hospital.
+                </p>
+
+                <button type="submit" class="btn btn-primary btn-large" style="width:100%;">
+                    <i class="fas fa-check-circle"></i> Confirm & Book Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

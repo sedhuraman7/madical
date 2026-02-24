@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="result-container"
+    style="max-width: 1200px; background-color: var(--primary-light); padding:20px; border-radius: 16px;">
+    <div class="result-header"
+        style="background:var(--primary-dark); color:white; border-radius: 12px; padding: 20px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <h2 style="color:white; margin-bottom:5px;"><i class="fas fa-chart-pie"></i> Public Health Intelligence Core
+            </h2>
+            <p style="color:rgba(255,255,255,0.8);">Live Outbreak Detection & Symptom Clustering (Admin Level)</p>
+        </div>
+        <div style="text-align:right;">
+            <p style="font-size:0.9rem; color:rgba(255,255,255,0.8);">System Status: <span
+                    style="color:#15f2cc;">Active</span></p>
+            <p style="font-size:0.8rem; color:rgba(255,255,255,0.6);">Last Sync: Just Now</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" style="grid-template-columns: repeat(2, 1fr); margin-top:20px;">
+        <!-- Stats Card -->
+        <div class="card"
+            style="grid-column: span 2; display: flex; justify-content: space-around; text-align: center; background:var(--card-bg);">
+            <div style="padding: 15px; border-right: 1px solid var(--border-color); flex:1;">
+                <h3 style="font-size: 3rem; color:var(--primary-color);">{{ stats.total_assessments }}</h3>
+                <p style="font-weight:600; color:var(--text-muted); text-transform:uppercase; font-size:0.8rem;">Total
+                    Submissions</p>
+            </div>
+            <div style="padding: 15px; border-right: 1px solid var(--border-color); flex:1;">
+                <h3 style="font-size: 3rem; color:var(--risk-high);">{{ stats.high_risk_cases }}</h3>
+                <p style="font-weight:600; color:var(--text-muted); text-transform:uppercase; font-size:0.8rem;">High
+                    Risk Cases</p>
+            </div>
+            <div style="padding: 15px; flex:1;">
+                <h3 style="font-size: 3rem; color:var(--text-main);">74<span style="font-size:1.5rem">%</span></h3>
+                <p style="font-weight:600; color:var(--text-muted); text-transform:uppercase; font-size:0.8rem;">Avg
+                    Disease Risk</p>
+            </div>
+        </div>
+
+        <!-- Alert Card -->
+        {% if stats.outbreak_alert %}
+        <div class="card risk-card risk-high"
+            style="grid-column: span 2; display: flex; align-items: center; justify-content: space-between; padding: 20px;">
+            <div>
+                <h3 style="color:var(--risk-high); margin-bottom:5px;"><i class="fas fa-exclamation-triangle"></i>
+                    Outbreak Alert Detected</h3>
+                <p><strong>Cluster:</strong> {{ stats.top_symptom }}</p>
+                <p><strong>Location:</strong> {{ stats.top_outbreak_area }}</p>
+            </div>
+            <button class="btn btn-primary" style="background-color: var(--risk-high); border:none;"><i
+                    class="fas fa-bell"></i> Broadcast SMS Alert</button>
+        </div>
+        {% endif %}
+
+        <!-- Clusters Data Table -->
+        <div class="card" style="grid-column: span 1; overflow-y:auto;">
+            <h3><i class="fas fa-layer-group"></i> Real-time Symptom Clusters</h3>
+            <table style="width:100%; text-align:left; border-collapse:collapse; margin-top:15px; font-size:0.95rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); color:var(--text-muted);">
+                        <th style="padding:10px;">Area</th>
+                        <th style="padding:10px;">Symptom</th>
+                        <th style="padding:10px;">Reports</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cluster in stats.clusters %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding:10px;"><strong>{{ cluster.loc }}</strong></td>
+                        <td style="padding:10px;">{{ cluster.symp }}</td>
+                        <td style="padding:10px;">
+                            <span class="badge"
+                                style="{% if cluster.count >= 20 %}background:var(--risk-high);{% elif cluster.count >= 10 %}background:var(--risk-moderate);{% else %}background:var(--risk-low);{% endif %} color:white; padding: 4px 8px;">
+                                {{ cluster.count }} Cases
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mock Heatmap -->
+        <div class="card" style="grid-column: span 1;">
+            <h3><i class="fas fa-map-marked-alt"></i> Geographic Heatmap</h3>
+            <div
+                style="background: #111827; height: 300px; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; margin-top:15px; border: 1px solid rgba(255,255,255,0.1);">
+                <p style="color:white; z-index:2; font-size: 0.85rem; text-align:center;">[ PostGIS Geo-Spatial Layer
+                    ]<br>Live Data Source Connected</p>
+                <!-- Dynamic looking radar / spread effect -->
+                <div
+                    style="position: absolute; width: 180px; height: 180px; background: radial-gradient(circle, rgba(239, 68, 68, 0.4) 0%, rgba(239, 68, 68, 0) 70%); top: 30px; left: 10%; animation: pulse 2s infinite alternate;">
+                </div>
+                <div
+                    style="position: absolute; width: 100px; height: 100px; background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0) 70%); bottom: 20px; right: 20%;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

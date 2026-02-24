@@ -1,0 +1,176 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div class="form-header">
+        <h2>Health Assessment Form</h2>
+        <p>Please fill out your details to generate your risk awareness profile.</p>
+    </div>
+    <form action="{{ url_for('assessment') }}" method="POST" class="assessment-form" id="assessmentForm">
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">Full Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" required placeholder="John Doe">
+            </div>
+        </div>
+
+        <div class="form-row split-row">
+            <div class="form-group">
+                <label for="age">Age <span class="required">*</span></label>
+                <input type="number" id="age" name="age" required min="1" max="120" placeholder="E.g. 35">
+            </div>
+            <div class="form-group">
+                <label for="weight">Weight (kg) <span class="required">*</span></label>
+                <input type="number" step="0.1" id="weight" name="weight" required min="1" placeholder="E.g. 70">
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender <span class="required">*</span></label>
+                <select id="gender" name="gender" required>
+                    <option value="" disabled selected>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group location-group">
+            <label for="location">Location <span class="required">*</span></label>
+            <div class="input-with-button">
+                <input type="text" id="location" name="location" required
+                    placeholder="City or area (e.g., New York, NY)">
+                <button type="button" class="btn btn-secondary btn-icon" id="detectLocationBtn" title="Detect Location">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+            </div>
+            <!-- Hidden inputs to store coordinates back to server if needed -->
+            <input type="hidden" id="lat" name="lat">
+            <input type="hidden" id="lng" name="lng">
+            <small class="hint">Enter manually or click the icon to auto-detect your location.</small>
+        </div>
+
+        <div class="form-group symptom-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <label style="margin:0;">Symptoms (Select all that apply)</label>
+                <button type="button" class="btn btn-secondary" id="voiceBtn"
+                    style="padding: 5px 10px; font-size: 0.9rem;">
+                    <i class="fas fa-microphone"></i> Voice Detection
+                </button>
+            </div>
+            <small id="voiceStatus" style="color:var(--secondary-color); display:none; margin-bottom:10px;">Listening...
+                speak your symptoms like "I have fever and cough"</small>
+            <div class="checkbox-grid">
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="fever">
+                    <span class="checkmark"></span> Fever
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="cough">
+                    <span class="checkmark"></span> Cough
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="chest pain">
+                    <span class="checkmark"></span> Chest Pain
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="headache">
+                    <span class="checkmark"></span> Headache
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="vomiting">
+                    <span class="checkmark"></span> Vomiting
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="breathing difficulty">
+                    <span class="checkmark"></span> Breathing Difficulty
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="body pain">
+                    <span class="checkmark"></span> Body Pain
+                </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" name="symptoms" value="sore throat">
+                    <span class="checkmark"></span> Sore Throat
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="duration">Duration of Symptoms <span class="required">*</span></label>
+            <select id="duration" name="duration" required>
+                <option value="" disabled selected>Select Duration</option>
+                <option value="1 day">1 day</option>
+                <option value="2-3 days">2-3 days</option>
+                <option value="4+ days">4+ days</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">Generate Assessment <i
+                    class="fas fa-file-medical-alt"></i></button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const voiceBtn = document.getElementById("voiceBtn");
+        const voiceStatus = document.getElementById("voiceStatus");
+
+        if (voiceBtn && 'webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            // Let it detect browser language natively (or set to 'en-US')
+
+            voiceBtn.addEventListener("click", () => {
+                recognition.start();
+                voiceStatus.style.display = "block";
+                voiceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                voiceStatus.innerText = `Detected NLP: "${transcript}"`;
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Voice Detection';
+
+                // NLP Keyword Matching Layer
+                const availableSymptoms = ["fever", "cough", "chest pain", "headache", "vomiting", "breathing difficulty", "body pain", "sore throat"];
+
+                let detected = 0;
+                availableSymptoms.forEach(sym => {
+                    const el = document.querySelector(`input[value="${sym}"]`);
+                    // simple robust matching
+                    if (transcript.includes(sym) ||
+                        (sym === "fever" && transcript.includes("temperature")) ||
+                        (sym === "chest pain" && transcript.includes("heart")) ||
+                        (sym === "breathing difficulty" && transcript.includes("breath"))) {
+                        if (el && !el.checked) {
+                            el.checked = true;
+                            detected++;
+                            // visual highlight
+                            el.parentElement.style.animation = "pulse 1s";
+                        }
+                    }
+                });
+                if (detected > 0) alert(`NLP automatically selected ${detected} symptoms based on your voice!`);
+            };
+
+            recognition.onerror = (event) => {
+                voiceStatus.innerText = "Voice recognition failed.";
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i> Voice Detection';
+            };
+        } else if (voiceBtn) {
+            voiceBtn.style.display = 'none';
+        }
+    });
+
+    // Add pulse animation for auto-checks
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes pulse { 0% { background-color: var(--primary-light); } 100% { background-color: transparent; } }`;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

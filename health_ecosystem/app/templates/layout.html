@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Public Health Awareness Assistant</title>
+    <!-- Modern Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <div class="disclaimer-banner">
+        <i class="fas fa-exclamation-triangle"></i> This is not a diagnostic tool. For awareness purposes only. Please
+        consult a qualified doctor for medical advice.
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <i class="fas fa-heartbeat"></i> AI Health Assistant
+            </a>
+            <div class="nav-links">
+                <div id="google_translate_element" style="display:inline-block; margin-right:10px;"></div>
+                <button id="themeToggle" class="btn btn-outline" style="border:none; padding:8px 15px; cursor:pointer;"
+                    title="Toggle Dark/Light Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline"
+                    style="border:none; padding:8px 15px;"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a href="{{ url_for('assessment') }}" class="btn btn-outline"
+                    style="border:none; padding:8px 15px;">Assessment Form</a>
+                <a href="{{ url_for('scanner') }}" class="btn btn-outline" style="border:none; padding:8px 15px;"><i
+                        class="fas fa-camera"></i> Skin Scanner</a>
+                <a href="{{ url_for('appointments') }}" class="btn btn-primary" style="padding:8px 15px;"><i
+                        class="fas fa-calendar-alt"></i> Doctor Appt</a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary"
+                    style="padding:8px 15px; margin-left: 10px;"><i class="fas fa-user"></i> Login / Register</a>
+            </div>
+        </div>
+    </nav>
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        <p>Developed by Sedhu Raman – AI Public Health Project</p>
+    </footer>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,ta,te',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript"
+        src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <!-- AI Chat Doctor Floating Widget -->
+    <div id="aiChatBot" class="chat-bot">
+        <div class="chat-bot-header" onclick="toggleChat()">
+            <i class="fas fa-robot"></i> AI Chat Doctor <span
+                style="font-size: 0.75rem; background: #22c55e; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">Online</span>
+            <i class="fas fa-chevron-up" id="chatDropIcon" style="float:right; margin-top:4px;"></i>
+        </div>
+        <div class="chat-bot-body" id="chatBody">
+            <div class="chat-bot-messages" id="chatMessages">
+                <div class="chat-msg bot-msg">👋 Hi! I am your AI Chat Doctor. I can understand Tanglish &
+                    English.<br><br><b>"Ungalukku enna problem?"</b> (e.g. Enakku rendu naal fever)</div>
+            </div>
+            <div class="chat-bot-input">
+                <input type="text" id="chatInput" placeholder="Type symptoms..." onkeypress="handleChatEnter(event)">
+                <button onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .chat-bot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .chat-bot-header {
+            background: var(--primary-dark);
+            color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .chat-bot-body {
+            display: none;
+            flex-direction: column;
+            height: 350px;
+        }
+
+        .chat-bot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .bot-msg {
+            background: white;
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            color: #1f2937;
+        }
+
+        .user-msg {
+            background: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-bot-input {
+            display: flex;
+            padding: 10px;
+            background: white;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-bot-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            outline: none;
+            color: black;
+        }
+
+        .chat-bot-input button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            margin-left: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+    <script>
+        function toggleChat() {
+            const body = document.getElementById('chatBody');
+            const icon = document.getElementById('chatDropIcon');
+            if (body.style.display === 'flex') {
+                body.style.display = 'none';
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                body.style.display = 'flex';
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        function handleChatEnter(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const msgs = document.getElementById('chatMessages');
+            const text = input.value.trim();
+            if (!text) return;
+
+            // User Message
+            msgs.innerHTML += `<div class="chat-msg user-msg">${text}</div>`;
+            input.value = '';
+            msgs.scrollTop = msgs.scrollHeight;
+
+            // Typing state
+            const typingId = 'typing-' + Date.now();
+            msgs.innerHTML += `<div class="chat-msg bot-msg" id="${typingId}"><i><i class="fas fa-spinner fa-spin"></i> Typing...</i></div>`;
+            msgs.scrollTop = msgs.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await res.json();
+
+                // Remove typing state & add LLM response safely
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+
+                msgs.innerHTML += `<div class="chat-msg bot-msg">${data.reply}</div>`;
+                msgs.scrollTop = msgs.scrollHeight;
+            } catch (e) {
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.innerHTML = "<span style='color:red;'>Connection Error.</span>";
+            }
+        }
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="form-wrapper" style="max-width: 800px; margin-top: 40px;">
+    <div class="form-header" style="background-color: var(--secondary-color);">
+        <h2><i class="far fa-calendar-check"></i> Book Doctor Appointment</h2>
+        <p>Schedule a secure consultation.</p>
+    </div>
+
+    <div style="padding: 30px;">
+        <h3>Find a Doctor Near You</h3>
+        <div class="form-row" style="margin-bottom: 20px;">
+            <div class="form-group" style="flex:1;">
+                <label>Enter your Location (e.g. Perambur, Anna Nagar)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="searchLocation" placeholder="Enter location..." required style="flex:1;">
+                    <button type="button" class="btn btn-secondary" onclick="searchHospitals()"><i
+                            class="fas fa-search"></i> Search</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="hospitalList" style="margin-bottom: 30px;">
+            <!-- Dynamic hospital results will appear here -->
+        </div>
+
+        <div id="bookingSection" class="card"
+            style="display:none; margin-bottom: 20px; background:var(--primary-light);">
+            <h3>Selected Healthcare Provider</h3>
+            <div class="doctor-item"
+                style="border:none; padding:15px; background:var(--card-bg); border-radius:12px; margin-bottom: 15px;">
+                <div class="doc-icon" style="background:var(--primary-light);"><i class="fas fa-stethoscope"></i></div>
+                <div class="doc-info">
+                    <h5 id="selectedHospitalName">{{ hospital }}</h5>
+                    <p class="doc-address"><i class="fas fa-map-marker-alt"></i> <span id="selectedHospitalAddress">{{
+                            address }}</span></p>
+                </div>
+            </div>
+
+            <form action="{{ url_for('book_appointment') }}" method="POST" class="assessment-form"
+                style="padding:0; box-shadow:none;">
+                <input type="hidden" name="hospital" id="hiddenHospital" value="{{ hospital }}">
+                <input type="hidden" name="address" id="hiddenAddress" value="{{ address }}">
+
+                <div class="form-row split-row">
+                    <div class="form-group">
+                        <label>Consultation Mode <span class="required">*</span></label>
+                        <select name="appt_type" required>
+                            <option value="" disabled selected>Select Mode</option>
+                            <option value="Direct Visit (In-Person)">Direct Visit (In-Person)</option>
+                            <option value="Online (Video Consultation)">Online Consultation (Video)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Date & Time <span class="required">*</span></label>
+                        <input type="datetime-local" name="appt_time" required>
+                    </div>
+                </div>
+
+                <div class="card"
+                    style="background-color: transparent; text-align: center; box-shadow:none; border:none; padding-bottom:0;">
+                    <p style="font-size: 0.95rem; color:var(--text-muted); margin-bottom: 20px;">
+                        This appointment request will be securely verified by the doctor's administration. You will pay
+                        directly at the hospital.
+                    </p>
+
+                    <button type="submit" class="btn btn-primary btn-large" style="width:100%;">
+                        <i class="fas fa-check-circle"></i> Confirm & Book Appointment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function searchHospitals() {
+            const loc = document.getElementById('searchLocation').value;
+            if (!loc) {
+                alert("Please enter a location!");
+                return;
+            }
+            const listDiv = document.getElementById('hospitalList');
+            listDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Searching...</p>';
+            document.getElementById('bookingSection').style.display = 'none';
+
+            fetch("{{ url_for('find_doctors') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ location: loc })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        let html = '';
+                        data.results.forEach(doc => {
+                            html += `
+                            <div class="doctor-item card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:15px; border-radius:12px;">
+                                <div style="display:flex; align-items:center; gap:15px;">
+                                    <div class="doc-icon" style="background:var(--primary-light); width:40px; height:40px; border-radius:50%; display:flex; justify-content:center; align-items:center; color:var(--primary-color);">
+                                        <i class="fas fa-hospital"></i>
+                                    </div>
+                                    <div class="doc-info">
+                                        <h5 style="margin:0; font-size:1.1rem; color:var(--text-main);">${doc.name}</h5>
+                                        <p style="margin:0; font-size:0.9rem; color:var(--text-muted);"><i class="fas fa-map-marker-alt"></i> ${doc.vicinity}</p>
+                                        <p style="margin:0; font-size:0.85rem; color:#f59e0b;"><i class="fas fa-star"></i> Rating: ${doc.rating || '4.5'}</p>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-outline" onclick="selectHospital('${doc.name}', '${doc.vicinity}')">Select</button>
+                            </div>`;
+                        });
+                        listDiv.innerHTML = html;
+                    } else {
+                        listDiv.innerHTML = '<p style="color:var(--text-muted);">No hospitals found in this area. Try another location.</p>';
+                    }
+                })
+                .catch(err => {
+                    listDiv.innerHTML = '<p style="color:red;">Error fetching hospitals.</p>';
+                });
+        }
+
+        function selectHospital(name, address) {
+            document.getElementById('selectedHospitalName').innerText = name;
+            document.getElementById('selectedHospitalAddress').innerText = address;
+            document.getElementById('hiddenHospital').value = name;
+            document.getElementById('hiddenAddress').value = address;
+            document.getElementById('bookingSection').style.display = 'block';
+            // Scroll to booking section
+            document.getElementById('bookingSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</div>
+</div>
+{% endblock %}

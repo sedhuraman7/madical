@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Public Health Awareness Assistant</title>
+    <!-- Modern Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <div class="disclaimer-banner">
+        <i class="fas fa-exclamation-triangle"></i> This is not a diagnostic tool. For awareness purposes only. Please
+        consult a qualified doctor for medical advice.
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="logo">
+                <i class="fas fa-heartbeat"></i> AI Health Assistant
+            </a>
+            <div class="nav-links">
+                <div id="google_translate_element" style="display:inline-block; margin-right:10px;"></div>
+                <button id="themeToggle" class="btn btn-outline" style="border:none; padding:8px 15px; cursor:pointer;"
+                    title="Toggle Dark/Light Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline"
+                    style="border:none; padding:8px 15px;"><i class="fas fa-chart-line"></i> Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('assessment') }}" class="btn btn-outline"
+                    style="border:none; padding:8px 15px;">Assessment Form</a>
+                <a href="{{ url_for('scanner') }}" class="btn btn-outline" style="border:none; padding:8px 15px;"><i
+                        class="fas fa-camera"></i> Skin Scanner</a>
+                <a href="{{ url_for('appointments') }}" class="btn btn-primary" style="padding:8px 15px;"><i
+                        class="fas fa-calendar-alt"></i> Doctor Appt</a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary"
+                    style="padding:8px 15px; margin-left: 10px;"><i class="fas fa-user"></i> Login / Register</a>
+            </div>
+        </div>
+    </nav>
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        <p>Developed by Sedhu Raman – AI Public Health Project</p>
+    </footer>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,ta,te',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript"
+        src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

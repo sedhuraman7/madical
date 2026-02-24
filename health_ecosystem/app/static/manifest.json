@@ -1,0 +1,7 @@
+{
+  "name": "AI Health Ecosystem",
+  "short_name": "Health",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0056b3"
+}
