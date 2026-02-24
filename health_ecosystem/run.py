@@ -133,8 +133,8 @@ def send_otp():
         msg['To'] = email
         msg.set_content(f"Hello,\n\nYour OTP for registering on the AI Health Assessment portal is: {otp}\n\nPlease do not share this code with anyone.\n\nStay safe,\nAI Health Assistant Dashboard")
 
-        # Send Email securely using Gmail SMTP
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        # Send Email securely using Gmail SMTP with a timeout so it doesn't hang
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=5) as smtp:
             smtp.login(SENDER_EMAIL, SENDER_PASS)
             smtp.send_message(msg)
             
@@ -165,7 +165,7 @@ def broadcast_alert():
     
     email_count = 0
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=5) as smtp:
             smtp.login(SENDER_EMAIL, SENDER_PASS)
             
             for u in users:
