@@ -651,14 +651,58 @@ body {
 }
 
 @media (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .nav-links .btn {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+        margin-left: 0 !important;
+    }
+
+    .logo {
+        font-size: 1.25rem;
+    }
+
+    .main-content {
+        padding: 20px 15px;
+    }
+
     .hero-section {
         flex-direction: column;
         text-align: center;
-        padding: 40px 20px;
+        padding: 30px 15px;
+    }
+
+    .hero-image {
+        width: 200px;
+        height: 200px;
+    }
+
+    .doctor-icon {
+        font-size: 100px;
+    }
+
+    .pulse-ring {
+        width: 180px;
+        height: 180px;
     }
 
     .hero-actions {
         justify-content: center;
+    }
+
+    .features-section {
+        grid-template-columns: 1fr;
     }
 
     .dashboard-grid {
@@ -669,6 +713,30 @@ body {
         flex-direction: column;
         text-align: center;
         gap: 20px;
+    }
+
+    .split-row {
+        grid-template-columns: 1fr;
+    }
+
+    .assessment-form {
+        padding: 20px;
+    }
+
+    .form-header {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 2rem !important;
+    }
+
+    h2 {
+        font-size: 1.5rem !important;
+    }
+
+    h3 {
+        font-size: 1.2rem !important;
     }
 }
 

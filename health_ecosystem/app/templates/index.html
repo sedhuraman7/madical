@@ -13,6 +13,9 @@
             </div>
             <script>
                 function checkPhoneAndStart() {
+                    {% if session.get('username') %}
+                    window.location.href = "{{ url_for('assessment') }}";
+                    {% else %}
                     let phone = prompt("Please enter your Mobile Number to verify your registration:");
                     if (!phone) return;
                     fetch("{{ url_for('check_phone') }}", {
@@ -29,6 +32,7 @@
                                 window.location.href = "{{ url_for('login') }}";
                             }
                         });
+                    {% endif %}
                 }
             </script>
         </div>

@@ -26,9 +26,20 @@ def init_db():
             age INTEGER,
             weight REAL,
             gender TEXT,
-            pre_diseases TEXT
+            pre_diseases TEXT,
+            phone TEXT,
+            email TEXT
         )
     ''')
+    try:
+        c.execute('ALTER TABLE users ADD COLUMN phone TEXT')
+    except sqlite3.OperationalError:
+        pass
+    try:
+        c.execute('ALTER TABLE users ADD COLUMN email TEXT')
+    except sqlite3.OperationalError:
+        pass
+    
     c.execute('''
         CREATE TABLE IF NOT EXISTS assessments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
