@@ -110,12 +110,13 @@ def send_otp():
     session['current_otp'] = otp
     
     # Sender Configuration (Using user credentials)
-    SENDER_EMAIL = os.environ.get('MAIL_USER', 'sedhu123sedhu@gmail.com')
+    SENDER_EMAIL = os.environ.get('MAIL_USER', 'sedhu1577@gmail.com')
     SENDER_PASS = os.environ.get('MAIL_PASS', 'eftkhehxsubmcnfx')
     
     try:
         # Create Email 
         msg = EmailMessage()
+
         msg['Subject'] = 'Your Health Ecosystem OTP'
         msg['From'] = f"AI Health Assistant <{SENDER_EMAIL}>"
         msg['To'] = email
@@ -148,7 +149,7 @@ def broadcast_alert():
     conn.close()
     
     # Sender Configuration
-    SENDER_EMAIL = os.environ.get('MAIL_USER', 'sedhu123sedhu@gmail.com')
+    SENDER_EMAIL = os.environ.get('MAIL_USER', 'sedhu1577@gmail.com')
     SENDER_PASS = os.environ.get('MAIL_PASS', 'eftkhehxsubmcnfx')
     
     email_count = 0
